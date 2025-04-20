@@ -1,0 +1,200 @@
+* Evolmacs: Self-Evolving Emacs Agent
+
+(for Open Source and LLM Engineering Consumption)
+
+** 1. Project Overview
+
+Evolmacs is a self-evolving Emacs agent that dynamically generates, tests, repairs, and integrates new Emacs Lisp functions based on user natural language descriptions.
+
+Instead of requiring users to manually write Emacs Lisp, Evolmacs collaborates with large language models (LLMs) to automate function generation and validation inside Emacs itself.
+
+Evolmacs grows your Emacs organically, one verified function at a time.
+
+** 2. Core Concepts
+
+| Concept           | Explanation                                                                                                                  |
+|-------------------+------------------------------------------------------------------------------------------------------------------------------|
+| Self-Evolution    | Evolmacs can modify and expand the user's Emacs environment without manual coding.                                           |
+| Feedback Loops    | Every generated function must pass its associated ERT tests. If it fails, Evolmacs will automatically retry with code fixes. |
+| LLM Collaboration | Evolmacs leverages external LLMs (Claude, GPT, etc.) to generate and repair code, via =llm.el=.                              |
+| Safe Execution    | All Emacs Lisp evaluation is sandboxed with error handling, and persistence only occurs after successful test validation.    |
+
+** 3. System Architecture
+
+*** 3.1 High-Level Diagram
+
+#+BEGIN_SRC mermaid
+flowchart TD
+    A[User describes desired function] --> B[LLM generates ERT test]
+    B --> C[LLM generates Emacs Lisp function]
+    C --> D[Evolmacs safely evaluates function]
+    D --> E[Evolmacs runs the ERT test]
+    E -->|Test passes| F[Save function and test into libraries]
+    E -->|Test fails| G[Analyze error and repair via LLM]
+    G --> C
+#+END_SRC
+
+
+*** 3.2 Components
+
+| Component           | Responsibility                                                              |
+|---------------------+-----------------------------------------------------------------------------|
+| Input Handler       | Gather user specification and target library information.                   |
+| LLM Driver          | Use llm.el to request test and function generation and code repair.         |
+| Eval Gateway        | Safely evaluate generated Elisp code; capture results or errors.            |
+| Test Runner         | Automatically run ERT tests and capture pass/fail results.                  |
+| Retry Engine        | Automatically fix and retry on failures, up to a configured maximum.        |
+| Persistence Manager | Save verified functions and tests into structured user configuration files. |
+
+
+** 4. Technology Stack
+
+|Area|Tool/Library|
+|LLM Communication|llm.el|
+|HTTP Bridge (optional)|simple-httpd.el (for external tools like ChatGPT Plugins)|
+|Testing Framework|ERT (Emacs Lisp Regression Testing)|
+|Emacs Version Requirement|28.1+ (lexical-binding required)|
+
+
+** 5. Directory Structure
+
+#+BEGIN_SRC 
+evolmacs/
+  evolmacs.el          ; Entry point
+  evolmacs-core.el     ; Main evolution loop
+  evolmacs-llm.el      ; High-level LLM communication wrappers
+  evolmacs-eval.el     ; Safe evaluation gateway
+  evolmacs-retry.el    ; Retry logic
+  evolmacs-bridge.el   ; Optional HTTP/TCP server for external integrations
+  tests/
+    evolmacs-tests.el
+README.md
+DESIGN.md
+ROADMAP.md
+LICENSE
+#+END_SRC
+
+** 6. LLM Protocol (Communication Schema)
+
+Evolmacs sends structured tasks to LLMs through llm.el, using JSON-like prompts.
+
+*** 6.1 Task: generate_package
+
+#+BEGIN_SRC javascript
+{
+  "task": "generate_package",
+  "spec": "Remove all HTML tags but keep inner text.",
+  "function_name": "strip-html-tags",
+  "library": "text-tools"
+}
+#+END_SRC
+
+Expected LLM response:
+
+#+BEGIN_SRC javascript
+{
+  "function_code": "(defun strip-html-tags ...) ",
+  "test_code": "(ert-deftest strip-html-tags-test ...)"
+}
+#+END_SRC
+
+
+*** 6.2 Task: repair_function
+
+#+BEGIN_SRC javascript
+{
+  "task": "repair_function",
+  "spec": "Reverse lines in region.",
+  "previous_code": "(defun reverse-lines-in-region ...) ",
+  "error": "ERT failed: Expected [...] but got [...]"
+}
+#+END_SRC
+
+Expected response: new corrected function_code.
+
+** 7. Evolution Process (Control Flow)
+
+ 1. User prompts Evolmacs for a new function.
+ 2. Evolmacs requests a corresponding ERT test and initial function from the LLM.
+ 3. Evolmacs:
+    - Safely evaluates the code.
+    - Loads and runs the generated test.
+ 4. If the test passes:
+    - Code and test are persisted into structured .el files.
+ 5. If the test fails:
+    - Error information is sent back to the LLM.
+    - LLM provides corrected code.
+    - Evolmacs retries, up to N attempts (default: 5).
+
+No code is persisted until the generated function passes its test.
+
+** 8. Safety Considerations
+
+| Risk                  | Mitigation                                                                 |
+|-----------------------+----------------------------------------------------------------------------|
+| Code injection risks  | eval sandboxing via condition-case; only allow Emacs Lisp form evaluation. |
+| Infinite repair loops | Hard limit on retry attempts.                                              |
+| Storage overflow      | Truncate excessively large LLM outputs; prompt user.                       |
+| Namespace pollution   | Auto-prefix generated functions with evolmacs/ unless otherwise specified. |
+
+** 9. Usage Example
+
+=User Prompt: "Create a function that removes all HTML tags from a buffer."=
+
+ 1. Evolmacs asks LLM:
+    - "Please write an Emacs Lisp function and an ERT test for this task."
+ 2. Evolmacs safely evaluates function and test code.
+ 3. Evolmacs runs the test.
+ 4. If test fails, Evolmacs automatically requests correction.
+ 5. Once the test passes, Evolmacs saves:
+    - Function into ~/.emacs.d/lisp/text-tools.el
+    - Test into ~/.emacs.d/tests/text-tools-tests.el
+
+** 10. Future Enhancements
+
+| Feature                         | Description                                    |
+|---------------------------------+------------------------------------------------|
+| Git Integration                 | Auto-commit newly evolved functions.           |
+| CI Integration                  | Auto-run tests in CI/CD pipelines.             |
+| Byte-Compile and Warning Checks | Fail builds on compiler warnings.              |
+| Multi-Model Support             | Allow dynamic switching between LLMs.          |
+| Emergent Strategy Planning      | Suggest new functions based on usage patterns. |
+
+
+** 11. License
+
+Evolmacs will be published under the MIT License for maximum compatibility and openness.
+
+
+** 12. Contribution Guidelines
+
+ - TDD-style contributions preferred (tests first).
+ - All new functions must include an ERT test.
+ - Functions must not be persisted unless passing tests.
+ - Use llm.el for any LLM interactions unless explicitly bypassed.
+ - Prefer small, self-contained pull requests.
+ - Status
+
+| Milestone                | Status    |
+|--------------------------+-----------|
+| M-0: Bootstrap           | ✅ Ready   |
+| M-1: Eval Gateway        | ⬜ Planned |
+| M-2: One-shot generation | ⬜ Planned |
+| M-2.5: Execution Bridge  | ⬜ Planned |
+| M-3: Automated test run  | ⬜ Planned |
+| M-4: Retry & Repair      | ⬜ Planned |
+
+
+** 📢 Notes for Coding Agents
+
+ - Do not giant-leap through milestones.
+ - Always check if ERT tests pass before considering a step done.
+ - Carefully handle eval and test failures; capture and forward errors to the LLM.
+ - Prefer structured prompts and responses (strict JSON).
+ - Code must remain Emacs-native, minimal external dependency beyond llm.el.
+
+** 🧠 Closing
+
+Evolmacs is not just a code generator.
+
+It is a living, self-correcting, self-evolving Emacs agent — one that grows with the user, not merely responds.

@@ -1,0 +1,50 @@
+* Evolmacs — Self-Evolving Emacs Agent
+
+Evolmacs is a next-generation Emacs extension that allows you to grow your environment dynamically — by simply describing what you want.
+
+It generates, tests, repairs, and saves new Emacs Lisp functions for you, powered by modern LLMs.
+
+** ✨ Features
+
+ - Natural language function generation inside Emacs
+ - Auto-validation with ERT tests
+ - Auto-repair on failures
+ - Organized saving into your Emacs configuration
+ - Full Emacs-native implementation (uses =llm.el=)
+
+** 🚀 Quick Start
+
+#+BEGIN_SRC elisp
+(use-package evolmacs
+  :ensure t
+  :config
+  (require 'evolmacs))
+#+END_SRC
+
+Then:
+
+#+BEGIN_SRC
+M-x evolmacs-new
+#+END_SRC
+
+Describe what you want!
+
+Evolmacs will do the rest.
+
+** 🔨 Requirements
+
+ - Emacs 28.1+
+ - =llm.el= installed and configured
+ - API Key for your LLM provider (OpenAI, Claude, etc.)
+
+** 📖 Learn More
+
+ - DESIGN.md
+ - ROADMAP.md
+ - CONTRIBUTING.md
+
+** 🛡 License
+
+Evolmacs is licensed under the MIT License.
+
+See LICENSE for details.
