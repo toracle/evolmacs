@@ -21,6 +21,7 @@
 (require 'evolmacs-eval)
 (require 'evolmacs-llm)
 (require 'ert)
+(require 'cl-lib)
 
 (defgroup evolmacs nil
   "Self-evolving Emacs agent."
@@ -83,43 +84,49 @@ Returns a plist with keys :success, :function-code, :test-code, and :error."
     
     ;; Check for LLM errors
     (when (plist-get llm-result :error)
-      (list :success nil
-            :error (plist-get llm-result :error)))
+      (cl-return-from evolmacs-generate-and-test
+        (list :success nil
+              :error (plist-get llm-result :error))))
     
     (setq function-code (plist-get llm-result :function-code))
     (setq test-code (plist-get llm-result :test-code))
     
-    ;; First, evaluate the function
-    (let ((eval-result (evolmacs-eval-function-safely function-code)))
-      (if (not (plist-get eval-result :success))
-          (setq error-msg (plist-get eval-result :error))
-        
-        ;; If function evaluation succeeded, run the test
-        (let ((test-result (evolmacs-run-test test-code)))
-          (if (plist-get test-result :success)
-              (setq success t)
-            (setq error-msg (plist-get test-result :error))
-            
-            ;; Attempt repair if test failed
-            (while (and (not success) (< attempts evolmacs-max-repair-attempts))
-              (cl-incf attempts)
-              (let ((repair-result (evolmacs-llm-repair-function 
-                                    spec function-code error-msg)))
-                (if (plist-get repair-result :error)
-                    (setq error-msg (plist-get repair-result :error))
-                  (setq function-code (plist-get repair-result :function-code))
-                  
-                  ;; Try the repaired function
+    ;; Use cl-labels to define helper functions with proper scope
+    (cl-labels ((eval-and-test-function ()
+                  "Evaluate function and run tests. Returns t on success."
                   (let ((eval-result (evolmacs-eval-function-safely function-code)))
                     (if (not (plist-get eval-result :success))
-                        (setq error-msg (plist-get eval-result :error))
-                      
-                      ;; Run the test again
+                        (progn
+                          (setq error-msg (plist-get eval-result :error))
+                          nil)
+                      ;; If evaluation succeeded, run the test
                       (let ((test-result (evolmacs-run-test test-code)))
-                        (when (plist-get test-result :success)
-                          (setq success t)
-                          (setq error-msg nil))))))))))))
+                        (if (plist-get test-result :success)
+                            (progn 
+                              (setq success t)
+                              t)
+                          (setq error-msg (plist-get test-result :error))
+                          nil)))))
+                
+                (try-repair ()
+                  "Try to repair the function and test it. Returns t on success."
+                  (let ((repair-result (evolmacs-llm-repair-function spec function-code error-msg)))
+                    (if (plist-get repair-result :error)
+                        (progn
+                          (setq error-msg (plist-get repair-result :error))
+                          nil)
+                      (setq function-code (plist-get repair-result :function-code))
+                      (eval-and-test-function)))))
+      
+      ;; Initial evaluation and test
+      (unless (eval-and-test-function)
+        ;; If initial test failed, attempt repair
+        (while (and (not success) (< attempts evolmacs-max-repair-attempts))
+          (cl-incf attempts)
+          (when (try-repair)
+            (setq error-msg nil)))))
     
+    ;; Return results
     (list :success success
           :function-code function-code
           :test-code test-code
