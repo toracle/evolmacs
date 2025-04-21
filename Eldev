@@ -1,0 +1,17 @@
+;; Eldev configuration for Evolmacs
+
+;; Tell Eldev to prefer dependencies from the working tree.
+(eldev-use-package-archive 'melpa)
+
+;; Configure package dependencies
+(eldev-add-extra-dependencies 'test 'ert)
+
+;; Main dependencies for runtime and main profiles only
+;; (Tests use mocked versions of the LLM functions)
+(eldev-add-extra-dependencies '(runtime main) 'llm)
+
+;; Setup test paths
+(eldev-add-loading-roots 'test "tests")
+
+;; Use lexical binding
+(eldev-use-plugin 'autoloads)

@@ -1,0 +1,16 @@
+# Compiled Elisp
+*.elc
+*.eln
+
+# Auto-generated files
+.eldev/
+/test-results/
+*.tar
+
+# Backups and auto-saves
+*~
+\#*\#
+.\#*
+
+# Package builds
+dist/

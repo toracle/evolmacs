@@ -12,6 +12,14 @@ It generates, tests, repairs, and saves new Emacs Lisp functions for you, powere
  - Organized saving into your Emacs configuration
  - Full Emacs-native implementation (uses =llm.el=)
 
+** 🏗️ Architecture
+
+The system is built around three core centers:
+
+1. *Eval Gateway (evolmacs-eval.el)*: Safe execution environment for Emacs Lisp code
+2. *LLM Communication (evolmacs-llm.el)*: Structured interaction with language models
+3. *Test Runner (evolmacs-core.el)*: Validation and feedback loops for generated code
+
 ** 🚀 Quick Start
 
 #+BEGIN_SRC elisp
@@ -24,7 +32,7 @@ It generates, tests, repairs, and saves new Emacs Lisp functions for you, powere
 Then:
 
 #+BEGIN_SRC
-M-x evolmacs-new
+M-x evolmacs-create-function
 #+END_SRC
 
 Describe what you want!
