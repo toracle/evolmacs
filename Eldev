@@ -4,7 +4,7 @@
 (eldev-use-package-archive 'melpa)
 
 ;; Configure package dependencies
-(eldev-add-extra-dependencies 'test 'ert)
+(eldev-add-extra-dependencies 'test 'ert 'undercover)
 
 ;; Main dependencies for runtime and main profiles only
 ;; (Tests use mocked versions of the LLM functions)

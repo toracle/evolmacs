@@ -16,6 +16,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'test-helper)
 (require 'cl-lib)
 
 ;; Rather than requiring all the files directly (which would need llm.el),

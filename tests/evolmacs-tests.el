@@ -16,6 +16,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'test-helper)
 (require 'evolmacs-eval)
 
 ;; We're only testing evolmacs-eval.el here, so we don't need the actual llm dependency
