@@ -49,3 +49,11 @@ coverage-summary:
 		-L .eldev/29.1/packages/shut-up-0.3.3 \
 		-L .eldev/29.1/packages/undercover-0.8.1 \
 		-l tests/coverage-summary.el
+
+# Show a CI-friendly summary of the coverage report
+coverage-summary-ci:
+	@$(EMACS) -Q --batch -L . -L tests \
+		-L .eldev/29.1/packages/dash-2.20.0 \
+		-L .eldev/29.1/packages/shut-up-0.3.3 \
+		-L .eldev/29.1/packages/undercover-0.8.1 \
+		-l tests/coverage-summary-ci.el

@@ -27,3 +27,14 @@ jobs:
     - name: Run tests
       run: |
         eldev -p -dtT test
+        
+    - name: Generate coverage report
+      run: |
+        make coverage
+        
+    - name: Print coverage summary
+      run: |
+        echo "## Evolmacs Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        make coverage-summary-ci >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
