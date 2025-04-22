@@ -24,10 +24,28 @@ package:
 install:
 	$(ELDEV) install
 
-# Coverage report - placeholder for future implementation
-# We'll add proper undercover.el integration as a follow-up task
+# Run tests with code coverage using undercover.el
 coverage:
-	@echo "NOTE: Code coverage with undercover.el will be implemented in a separate PR."
-	@echo "Running tests for now."
-	$(ELDEV) test
-	@echo "TODO: Implement full undercover.el integration with proper dependencies."
+	@echo "Running tests with coverage reporting..."
+	@echo "Removing compiled files first..."
+	@rm -f evolmacs*.elc
+	
+	@$(EMACS) -Q --batch -L . -L tests \
+		-L .eldev/29.1/packages/dash-2.20.0 \
+		-L .eldev/29.1/packages/shut-up-0.3.3 \
+		-L .eldev/29.1/packages/undercover-0.8.1 \
+		-l tests/run-coverage.el
+
+	@if [ -f "coverage-final.json" ]; then \
+		echo "Coverage report generated in coverage-final.json"; \
+	else \
+		echo "No coverage report was generated. Check the setup."; \
+	fi
+
+# Show a summary of the coverage report
+coverage-summary:
+	@$(EMACS) -Q --batch -L . -L tests \
+		-L .eldev/29.1/packages/dash-2.20.0 \
+		-L .eldev/29.1/packages/shut-up-0.3.3 \
+		-L .eldev/29.1/packages/undercover-0.8.1 \
+		-l tests/coverage-summary.el
