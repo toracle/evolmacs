@@ -14,3 +14,10 @@
 
 # Package builds
 dist/
+
+# Coverage
+coverage-final.json
+/coverage/
+
+# Temporary directories
+/packages/
