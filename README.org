@@ -1,5 +1,7 @@
 * Evolmacs — Self-Evolving Emacs Agent
 
+[[https://github.com/toracle/evolmacs/actions/workflows/test.yml][https://github.com/toracle/evolmacs/actions/workflows/test.yml/badge.svg]]
+
 Evolmacs is a next-generation Emacs extension that allows you to grow your environment dynamically — by simply describing what you want.
 
 It generates, tests, repairs, and saves new Emacs Lisp functions for you, powered by modern LLMs.
