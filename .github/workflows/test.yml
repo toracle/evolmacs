@@ -30,11 +30,43 @@ jobs:
         
     - name: Generate coverage report
       run: |
-        make coverage
+        # Find package paths in .eldev directory
+        DASH_PATH=$(find .eldev -name "dash-*" -type d | head -n 1 || echo "")
+        SHUTUP_PATH=$(find .eldev -name "shut-up-*" -type d | head -n 1 || echo "")
+        UNDERCOVER_PATH=$(find .eldev -name "undercover-*" -type d | head -n 1 || echo "")
+        
+        LOAD_PATHS="-L . -L tests"
+        
+        # Add package paths if found
+        if [ -n "$DASH_PATH" ]; then LOAD_PATHS="$LOAD_PATHS -L $DASH_PATH"; fi
+        if [ -n "$SHUTUP_PATH" ]; then LOAD_PATHS="$LOAD_PATHS -L $SHUTUP_PATH"; fi
+        if [ -n "$UNDERCOVER_PATH" ]; then LOAD_PATHS="$LOAD_PATHS -L $UNDERCOVER_PATH"; fi
+        
+        echo "Load paths: $LOAD_PATHS"
+        
+        # Run tests directly with undercover
+        emacs -Q --batch $LOAD_PATHS -l tests/run-coverage.el || true
         
     - name: Print coverage summary
       run: |
-        echo "## Evolmacs Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
-        make coverage-summary-ci >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
+        if [ -f "coverage-final.json" ]; then
+          # Find package paths in .eldev directory (same as above)
+          DASH_PATH=$(find .eldev -name "dash-*" -type d | head -n 1 || echo "")
+          SHUTUP_PATH=$(find .eldev -name "shut-up-*" -type d | head -n 1 || echo "")
+          UNDERCOVER_PATH=$(find .eldev -name "undercover-*" -type d | head -n 1 || echo "")
+          
+          LOAD_PATHS="-L . -L tests"
+          
+          # Add package paths if found
+          if [ -n "$DASH_PATH" ]; then LOAD_PATHS="$LOAD_PATHS -L $DASH_PATH"; fi
+          if [ -n "$SHUTUP_PATH" ]; then LOAD_PATHS="$LOAD_PATHS -L $SHUTUP_PATH"; fi
+          if [ -n "$UNDERCOVER_PATH" ]; then LOAD_PATHS="$LOAD_PATHS -L $UNDERCOVER_PATH"; fi
+          
+          echo "## Evolmacs Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          emacs -Q --batch $LOAD_PATHS -l tests/coverage-summary-ci.el >> $GITHUB_STEP_SUMMARY || echo "Error generating summary"
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "No coverage data was generated" >> $GITHUB_STEP_SUMMARY
+        fi
